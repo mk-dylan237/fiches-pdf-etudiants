@@ -2,24 +2,208 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fiches PDF Étudiants</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire d'inscription étudiant</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eaf0f8;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 25px;
+        }
+
+        form {
+            background-color: white;
+            max-width: 450px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 5px rgba(35, 99, 235, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        button[type="submit"] {
+            background-color: #2563eb;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #1e40af;
+        }
+
+        button[type="reset"] {
+            background-color: #dc2626;
+        }
+
+        button[type="reset"]:hover {
+            background-color: #991b1b;
+        }
+
+        @media (max-width: 500px) {
+            form {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <h1>Fiches PDF Étudiants</h1>
 
-  <p>
-    Ce projet permet de préparer des fiches d'inscription
-    à partir d'un formulaire numérique et de générer des
-    documents PDF.
-  </p>
+    <h1>Formulaire d'inscription étudiant</h1>
 
-  <p>
-    Les informations fournies sont destinées à la gestion
-    des inscriptions et au traitement des documents associés.
-  </p>
+    <form id="formulaire">
 
-  <p>Contact : indiquez ici votre adresse de contact réelle.</p>
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" required>
+
+        <label for="prenom">Prénom :</label>
+        <input type="text" id="prenom" required>
+
+        <label for="ages">Âge :</label>
+        <input type="number" id="ages" min="1" required>
+
+        <label for="date_inscription">Date d'inscription :</label>
+        <input type="date" id="date_inscription" required>
+
+        <label for="telephone">Numéro de téléphone :</label>
+        <input type="tel" id="telephone" required>
+
+        <label for="matricule">Matricule :</label>
+        <input type="text" id="matricule" required>
+
+        <label for="classe">Classe :</label>
+        <input type="text" id="classe">
+
+        <label for="filiere">Filière :</label>
+        <select id="filiere" required>
+            <option value="">Choisir une filière</option>
+            <option value="Génie logiciel">Génie logiciel</option>
+            <option value="Réseaux">Réseaux</option>
+            <option value="Santé">Santé</option>
+            <option value="Ressources humaines">Ressources humaines</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Autre">Autre</option>
+        </select>
+
+        <div id="autreContainer" style="display:none;">
+            <label for="autreFiliere">Préciser la filière :</label>
+            <input type="text" id="autreFiliere">
+        </div>
+
+        <button type="submit">Envoyer</button>
+        <button type="reset">Effacer</button>
+
+    </form>
+
+    <script>
+        const formulaire = document.getElementById("formulaire");
+        const filiereSelect = document.getElementById("filiere");
+        const autreContainer = document.getElementById("autreContainer");
+        const autreFiliere = document.getElementById("autreFiliere");
+
+        filiereSelect.addEventListener("change", function () {
+            const autreChoisie = this.value === "Autre";
+
+            autreContainer.style.display = autreChoisie ? "block" : "none";
+            autreFiliere.required = autreChoisie;
+
+            if (!autreChoisie) {
+                autreFiliere.value = "";
+            }
+        });
+
+        formulaire.addEventListener("reset", function () {
+            autreContainer.style.display = "none";
+            autreFiliere.required = false;
+        });
+
+        formulaire.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const donnees = {
+                nom: document.getElementById("nom").value.trim(),
+                prenom: document.getElementById("prenom").value.trim(),
+                age: document.getElementById("ages").value,
+                dateInscription: document.getElementById("date_inscription").value,
+                telephone: document.getElementById("telephone").value.trim(),
+                matricule: document.getElementById("matricule").value.trim(),
+                classe: document.getElementById("classe").value.trim(),
+                filiere: filiereSelect.value === "Autre"
+                    ? autreFiliere.value.trim()
+                    : filiereSelect.value
+            };
+
+            try {
+                const reponse = await fetch(
+                    "http://localhost:3000/api/inscription",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(donnees)
+                    }
+                );
+
+                const resultat = await reponse.json();
+
+                if (!reponse.ok) {
+                    throw new Error(resultat.message);
+                }
+
+                alert("Inscription reçue avec succès !");
+                formulaire.reset();
+
+            } catch (erreur) {
+                alert("Erreur : " + erreur.message);
+            }
+        });
+    </script>
+
 </body>
 </html>
+
+
